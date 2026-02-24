@@ -3,7 +3,10 @@
 import { useState, useEffect } from 'react'
 import RouteForm from '@/components/RouteForm'
 import RouteResults from '@/components/RouteResults'
-import Map from '@/components/Map'
+//import Map from '@/components/Map'
+import dynamic from 'next/dynamic'
+
+const Map = dynamic(() => import('@/components/Map'), { ssr: false })
 
 interface Route {
   id: string

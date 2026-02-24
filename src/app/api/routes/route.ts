@@ -285,10 +285,19 @@ async function getRoutesBetweenPoints(
   if (!endLoc) endLoc = { lat: 40.758, lng: -73.9855 }
 
   // Get 3 real routes using OSRM
+  // const [directRoute, northRoute, southRoute] = await Promise.all([
+  //   getRealRoute(startLoc, endLoc),
+  //   getAlternativeRoute(startLoc, endLoc, 'North via ' + (startLoc.lat + 0.02)),
+  //   getAlternativeRoute(startLoc, endLoc, 'South via ' + (startLoc.lat - 0.02))
+  // ])
+
+  const northWaypoint = { lat: startLoc.lat + 0.02, lng: startLoc.lng }
+  const southWaypoint = { lat: startLoc.lat - 0.02, lng: startLoc.lng }
+
   const [directRoute, northRoute, southRoute] = await Promise.all([
     getRealRoute(startLoc, endLoc),
-    getAlternativeRoute(startLoc, endLoc, 'North via ' + (startLoc.lat + 0.02)),
-    getAlternativeRoute(startLoc, endLoc, 'South via ' + (startLoc.lat - 0.02))
+    getAlternativeRoute(startLoc, endLoc, `${northWaypoint.lat},${northWaypoint.lng}`),
+    getAlternativeRoute(startLoc, endLoc, `${southWaypoint.lat},${southWaypoint.lng}`)
   ])
 
   // Calculate AQI for each route
@@ -343,6 +352,7 @@ async function getRoutesBetweenPoints(
 
   return routes
 }
+
 
 export async function POST(req: NextRequest) {
   try {

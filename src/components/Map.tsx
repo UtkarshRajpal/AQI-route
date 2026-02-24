@@ -1,8 +1,18 @@
 'use client'
 
-import { useMemo } from 'react'
-import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet'
+import { useMemo, useRef, useEffect} from 'react'
+import { MapContainer, TileLayer, Polyline, Marker, Popup , useMap} from 'react-leaflet'
 import L from 'leaflet'
+
+function MapRefSetter({ center, mapRef }: { center: [number, number], mapRef: any }) {
+  const map = useMap()
+  useEffect(() => {
+    mapRef.current = map
+    map.setView(center, 13)
+  }, [center, map, mapRef])
+  return null
+}
+
 
 interface Route {
   id: string
@@ -80,6 +90,15 @@ export default function Map({
     }
   }, [routes, startLocation, endLocation])
 
+  const mapRef = useRef<any>(null)
+
+  // Add this effect to recenter the map when center changes
+  useEffect(() => {
+    if (mapRef.current && center) {
+      mapRef.current.setView(center, 13) // 13 is the zoom level
+    }
+  }, [center])
+
   return (
     <div className="w-full h-full relative">
       <MapContainer
@@ -88,6 +107,8 @@ export default function Map({
         scrollWheelZoom={true}
         style={{ height: '100%', width: '100%' }}
       >
+      <MapRefSetter center={center} mapRef={mapRef} />
+      
         {/* OpenStreetMap tiles */}
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
