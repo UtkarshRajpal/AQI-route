@@ -98,19 +98,20 @@ export default function RouteForm({ onSearch, loading, userLocation }: RouteForm
   const getNominatimPredictions = async (input: string): Promise<PlacePrediction[]> => {
     try {
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(input)}&limit=5`,
-        {
-          headers: { 'User-Agent': 'AQI-Route-Planner' }
-        }
+        `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(input)}&limit=5`
       )
+      if (!response.ok) {
+        console.warn('Nominatim returned non-ok response', response.status)
+        return []
+      }
       const data = await response.json()
       
       if (data.length > 0) {
         return data.map((result: any) => ({
           place_id: result.osm_id,
           description: result.display_name,
-          main_text: result.name || result.address.city || result.address.town || result.address.village,
-          secondary_text: result.address.city || result.address.state || result.address.country || '',
+          main_text: result.name || result.address.city || result.address.town || result.address.village || result.display_name,
+          secondary_text: [result.address.state, result.address.country].filter(Boolean).join(', '),
           lat: parseFloat(result.lat),
           lng: parseFloat(result.lon)
         }))
@@ -269,21 +270,24 @@ export default function RouteForm({ onSearch, loading, userLocation }: RouteForm
       {/* API Key warning */}
       {!apiInitialized && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-          ℹ️ Using demo location suggestions. For live autocomplete, configure your Google Maps API key in .env.local
+          Find the route from <b>Start Location</b> to <b>End Location</b> with the best air quality, helping you avoid pollution and travel healthier!
         </div>
       )}
 
       <div className="space-y-4">
         {/* Starting Point */}
         <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Starting Point</label>
+          <label className="sr-only">Starting Point</label>
+          <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-700 text-xs font-bold">S</span>
+          </div>
           <input
             type="text"
             value={startPoint}
             onChange={handleStartChange}
             onFocus={() => startSuggestions.length > 0 && setShowStartSuggestions(true)}
-            placeholder="e.g., Central Park, NYC"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            placeholder="Start location"
+            className="w-full pl-14 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             disabled={loading}
             autoComplete="off"
           />
@@ -308,14 +312,17 @@ export default function RouteForm({ onSearch, loading, userLocation }: RouteForm
 
         {/* Ending Point */}
         <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Ending Point</label>
+          <label className="sr-only">Ending Point</label>
+          <div className="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+            <span className="flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-700 text-xs font-bold">E</span>
+          </div>
           <input
             type="text"
             value={endPoint}
             onChange={handleEndChange}
             onFocus={() => endSuggestions.length > 0 && setShowEndSuggestions(true)}
-            placeholder="e.g., Times Square, NYC"
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+            placeholder="End location"
+            className="w-full pl-14 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
             disabled={loading}
             autoComplete="off"
           />

@@ -21,9 +21,10 @@ interface RouteResultsProps {
   routes: Route[]
   selectedRouteId?: string
   onSelectRoute?: (routeId: string) => void
+  onToggleFilter?: (routeId: string) => void
 }
 
-export default function RouteResults({ routes, selectedRouteId, onSelectRoute }: RouteResultsProps) {
+export default function RouteResults({ routes, selectedRouteId, onSelectRoute, onToggleFilter }: RouteResultsProps) {
   const getAQIColor = (aqi: number) => {
     if (aqi <= 50) return 'bg-green-100 text-green-800 border-green-300'
     if (aqi <= 100) return 'bg-yellow-100 text-yellow-800 border-yellow-300'
@@ -56,23 +57,37 @@ export default function RouteResults({ routes, selectedRouteId, onSelectRoute }:
         <div
           key={route.id}
           onClick={() => onSelectRoute?.(route.id)}
-          className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-all cursor-pointer border-2 ${
+          className={`bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg hover:w-full transition-all cursor-pointer border-2 ${
             selectedRouteId === route.id ? 'border-blue-500 shadow-lg' : 'border-gray-200'
           }`}
         >
           <div className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="text-sm font-semibold text-gray-900">
+            <div className="flex items-start justify-between mb-3 gap-3">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-gray-900 truncate">
                   Route {idx + 1}: {route.name}
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">{route.description}</p>
               </div>
-              <div className="text-right">
-                <div className={`px-2 py-1 rounded-full border text-xs font-semibold ${getAQIColor(route.aqi)}`}>
-                  AQI: {route.aqi}
+              <div className="text-right flex-shrink-0 flex items-center gap-2">
+                {selectedRouteId === route.id && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onToggleFilter?.(route.id)
+                    }}
+                    className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors whitespace-nowrap"
+                    title="Show only this route"
+                  >
+                    🔍 Only
+                  </button>
+                )}
+                <div>
+                  <div className={`px-2 py-1 rounded-full border text-xs font-semibold whitespace-nowrap ${getAQIColor(route.aqi)}`}>
+                    AQI: {route.aqi}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">{route.aqiLevel}</p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{route.aqiLevel}</p>
               </div>
             </div>
 

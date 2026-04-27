@@ -27,6 +27,7 @@ export default function Home() {
   const [startCoords, setStartCoords] = useState<{ lat: number; lng: number } | undefined>()
   const [endCoords, setEndCoords] = useState<{ lat: number; lng: number } | undefined>()
   const [selectedRouteId, setSelectedRouteId] = useState<string>('')
+  const [filteredRouteId, setFilteredRouteId] = useState<string>('') // Track which route is isolated
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null)
   const [locationLoading, setLocationLoading] = useState(true)
 
@@ -62,6 +63,7 @@ export default function Home() {
     setStartCoords(startLocation)
     setEndCoords(endLocation)
     setSelectedRouteId('')
+    setFilteredRouteId('') // Reset filter on new search
     
     try {
       const response = await fetch('/api/routes', {
@@ -91,15 +93,23 @@ export default function Home() {
     }
   }
 
+  const handleToggleFilter = (routeId: string) => {
+    // Toggle filter: if the same route is selected, clear the filter; otherwise set it
+    setFilteredRouteId(filteredRouteId === routeId ? '' : routeId)
+  }
+
+  // Filter routes based on filteredRouteId
+  const displayedRoutes = filteredRouteId ? routes.filter(r => r.id === filteredRouteId) : routes
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
       <div className="container mx-auto px-4 py-8 h-full">
         <header className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            🌍 AQI Route Planner
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            AQI Route Planner
           </h1>
-          <p className="text-lg text-gray-600">
-            Find the healthiest air quality route from A to B
+          <p className="text-lg text-gray-600 font-medium">
+            Navigate smarter—choose routes with the lowest pollution and breathe easier on every journey.
           </p>
         </header>
 
@@ -129,17 +139,31 @@ export default function Home() {
             {/* Routes List */}
             {routes.length > 0 && (
               <div className="overflow-y-auto">
+                {filteredRouteId && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 flex items-center justify-between">
+                    <p className="text-xs text-blue-700">
+                      Showing only <strong>{routes.find(r => r.id === filteredRouteId)?.name}</strong>
+                    </p>
+                    <button
+                      onClick={() => setFilteredRouteId('')}
+                      className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded transition-colors"
+                    >
+                      Show All
+                    </button>
+                  </div>
+                )}
                 <RouteResults 
-                  routes={routes} 
+                  routes={displayedRoutes} 
                   selectedRouteId={selectedRouteId}
                   onSelectRoute={setSelectedRouteId}
+                  onToggleFilter={handleToggleFilter}
                 />
               </div>
             )}
 
             {!loading && routes.length === 0 && !error && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-gray-600 text-sm">
-                Enter starting and ending points to find the best routes
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center text-gray-500 text-sm font-semibold">
+                Breathe better. Travel smarter.
               </div>
             )}
           </div>
@@ -148,11 +172,12 @@ export default function Home() {
           <div className="lg:col-span-3 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
             {routes.length > 0 ? (
               <Map
-                routes={routes}
+                routes={displayedRoutes}
                 startLocation={startCoords}
                 endLocation={endCoords}
                 selectedRouteId={selectedRouteId}
                 onRouteSelect={setSelectedRouteId}
+                onToggleFilter={handleToggleFilter}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">

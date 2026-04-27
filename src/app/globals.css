@@ -21,3 +21,8 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+.custom-div-icon {
+  background: transparent !important;
+  border: none !important;
+}
